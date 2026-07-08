@@ -1,0 +1,9 @@
+# This file is managed by Conan, contents will be overwritten.
+# To keep your changes, remove these comment lines, but the plugin won't be able to modify your requirements
+
+requirements:
+  - "rapidjson/1.1.0"
+  - "glib/2.85.3"
+  - "capstone/5.0.6"
+  - "lz4/1.10.0"
+  - "boost/1.88.0"
