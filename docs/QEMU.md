@@ -75,7 +75,7 @@ unresolved **next** / **next_punk** edge, later reconciled by CPU-Tracer's edge-
 * **SAVEMAIN_NAME** / **SAVELOCS_NAME** / **SAVEMMIO_NAME** / **SAVEREG_NAME** - Filename prefixes for block, edge, MMIO, and register save files 
 * **SAVE_EXTENSION** - Output file extension (**.lurablks**) 
 * **DEFAULT_MODE** - Interpretation mode used when **helpers::get_mode** can't match a Capstone handle 
-* **ARCH** - Target architecture (currently **X86**) 
+* **ARCH** - Target architecture (currently **x86_64**) 
 * **MAX_CORES** - Max emulated VCPUs 
 
 
@@ -91,7 +91,7 @@ unresolved **next** / **next_punk** edge, later reconciled by CPU-Tracer's edge-
 
 # Architecture Specific Support
 
-Currently: **X86** Guest Architecture is supported. 
+Currently: **x86_64** Guest Architecture is supported. 
 
 ## Adding Support
 
@@ -104,7 +104,7 @@ To add support for a new guest architecture, you must implement its specific har
 
 
 2. **Identify Special Instructions (Hidden Side-Effects):**
-* Determine if the architecture uses specific instructions to modify critical system state or relocate memory-mapped hardware (analogous to WRMSR on X86).
+* Determine if the architecture uses specific instructions to modify critical system state or relocate memory-mapped hardware (analogous to WRMSR on x86_64).
 * Implement dedicated instruction callbacks to intercept and track these state changes ahead of standard memory tracking.
 
 
@@ -137,15 +137,15 @@ The enum needs to be regenerated whenever the QEMU tree the plugin links against
 Given a specific instruction in a given architecture it can have hidden side effects that signal non explicit edges.
 This is designed to hook that specific instruction and analyze it.
 
-* **X86**: **WRMSR** instructions, which get dedicated callbacks (**x86::cbs::insts::first_wrmsr_exec** / **wrmsr_exec**). Required because a write to **IA32_APIC_BASE** (MSR **0x1B**) relocates the local APIC's MMIO window and must be intercepted ahead of normal memory tracking.
+* **x86_64**: **WRMSR** instructions, which get dedicated callbacks (**x86_64::cbs::insts::first_wrmsr_exec** / **wrmsr_exec**). Required because a write to **IA32_APIC_BASE** (MSR **0x1B**) relocates the local APIC's MMIO window and must be intercepted ahead of normal memory tracking.
 
 ## Architecture Helpers
 
 Architecture-specific data is organized as follows:
 
-* **QEMU/src/archs/X86.hpp** — Handles x86-specific operations: **WRMSR**-based APIC relocation. ICR/APIC-ID MMIO decoding for cross-VCPU edges.
+* **QEMU/src/archs/X86.hpp** — Handles x86_64-specific operations: **WRMSR**-based APIC relocation. ICR/APIC-ID MMIO decoding for cross-VCPU edges.
 
-### X86 (Signaled Edges)
+### x86_64 (Signaled Edges)
 
 Writes into the local APIC's MMIO window are decoded directly, without waiting for trace analysis:
 * **VCPU Mapping:** A write to the APIC ID register updates a **VCPU-index <-> APIC-ID** map.

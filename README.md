@@ -76,7 +76,7 @@ This produces two targets:
 
 Load the plugin into QEMU with **-plugin**:
 ```
-qemu-system-x86_64.exe -plugin ":\path\to\QEMU.dll" -drive file=disk.img,format=raw
+qemu-system-x86_64.exe -plugin C:\path\to\QEMU.dll -drive file=disk.img,format=raw
 ```
 Full examples (MS-DOS, Windows Vista, Windows 10 boots) and instructions for stopping a trace safely are in [docs/QEMU.md](docs/QEMU.md).
 Trace files are written to **config::SAVE_DIRECTORY** (default **C:\qemudumps\blocks\**): one main save file plus one edge file per VCPU to eliminate mutex overhead.
@@ -103,5 +103,5 @@ All documentation and examples for each can be found:
 * [Example](docs/Example.md) – Load a trace, reconstruct its CFG, and print a linearized listing
 
 ## Current Guest Architecture Support
-Current supporting guest architecture: **x86**.
+Current supporting guest architecture: **x86_64**.
 Adding support for another architecture can be found here [docs/QEMU.md](docs/QEMU.md).
