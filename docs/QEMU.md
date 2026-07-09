@@ -89,11 +89,11 @@ unresolved **next** / **next_punk** edge, later reconciled by CPU-Tracer's edge-
 
 
 
-## Architecture Specific Support
+# Architecture Specific Support
 
 Currently: **X86** Guest Architecture is supported. 
 
-#### Adding Support
+## Adding Support
 
 To add support for a new guest architecture, you must implement its specific hardware quirks, interrupt handling, and register layouts by following these steps:
 
@@ -118,7 +118,7 @@ To add support for a new guest architecture, you must implement its specific har
 * Handle writes to the specific interrupt controller's MMIO synthesize a **signaled_edge** targeting the resolved destination VCPU. This guarantees that hardware-level wakeups and interrupts are properly realized as graph edges during offline CFG reconstruction.
 
 
-#### register indices (**UPDATEME.hpp**)
+## register indices (**UPDATEME.hpp**)
 
 Each architecture has a manually maintained copy of the register index ordering that QEMU's plugin API exposes through **qemu_plugin_get_registers** / **qemu_plugin_read_register**.
  
@@ -132,20 +132,20 @@ The enum needs to be regenerated whenever the QEMU tree the plugin links against
 3. **cbs::inst::debug::print_regs** will print each register's **name = index** pair.
 4. Copy that output into **QEMU::regs::[[ARCHITECTURE]]**.
 
-#### Memwrites
+## Memwrites
 
 Given a specific instruction in a given architecture it can have hidden side effects that signal non explicit edges.
 This is designed to hook that specific instruction and analyze it.
 
 * X86: **WRMSR** instructions, which get dedicated callbacks (**x86::cbs::insts::first_wrmsr_exec** / **wrmsr_exec**). Required because a write to **IA32_APIC_BASE** (MSR **0x1B**) relocates the local APIC's MMIO window and must be intercepted ahead of normal memory tracking.
 
-#### Architecture Helpers
+## Architecture Helpers
 
 Architecture-specific data is organized as follows:
 
 * **QEMU/src/archs/X86.hpp** — Handles x86-specific operations: **WRMSR**-based APIC relocation. ICR/APIC-ID MMIO decoding for cross-VCPU edges.
 
-##### X86 (Signaled Edges)
+### X86 (Signaled Edges)
 
 Writes into the local APIC's MMIO window are decoded directly, without waiting for trace analysis:
 * **VCPU Mapping:** A write to the APIC ID register updates a **VCPU-index <-> APIC-ID** map.

@@ -10,7 +10,7 @@ Boot-to-Usage run of Windows-Vista Translation Block count and edges with instru
 ![example-statspic](example-statspic.png)
 
 ### Window-Vista: Truncated Linearized Run
-Truncated Linearized run with final text being over 24.3GB.
+Truncated Linearized run with final text being over **24.3GB**.
 
 ![example-linearized](example-linearized.png)
 
