@@ -137,7 +137,7 @@ The enum needs to be regenerated whenever the QEMU tree the plugin links against
 Given a specific instruction in a given architecture it can have hidden side effects that signal non explicit edges.
 This is designed to hook that specific instruction and analyze it.
 
-* X86: **WRMSR** instructions, which get dedicated callbacks (**x86::cbs::insts::first_wrmsr_exec** / **wrmsr_exec**). Required because a write to **IA32_APIC_BASE** (MSR **0x1B**) relocates the local APIC's MMIO window and must be intercepted ahead of normal memory tracking.
+* **X86**: **WRMSR** instructions, which get dedicated callbacks (**x86::cbs::insts::first_wrmsr_exec** / **wrmsr_exec**). Required because a write to **IA32_APIC_BASE** (MSR **0x1B**) relocates the local APIC's MMIO window and must be intercepted ahead of normal memory tracking.
 
 ## Architecture Helpers
 
