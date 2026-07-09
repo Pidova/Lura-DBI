@@ -6,10 +6,12 @@ A small program that loads Lura-DBI trace files from disk, reconstructs their co
 
 ### Window-Vista: Instruction Statistics 
 Boot-to-Usage run of Windows-Vista Translation Block count and edges with instruction count.
+
 ![example-statspic](example-statspic.png)
 
 ### Window-Vista: Truncated Linearized Run
 Truncated Linearized run with final text being over 24.3GB.
+
 ![example-linearized](example-linearized.png)
 
 ## What does Example do?

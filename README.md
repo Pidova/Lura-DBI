@@ -5,6 +5,7 @@ guest and reconstructing them into analyzable, graph-based data.
 
 ## Example Usage: Finding Sha-1 Hashing Algorithm Routine in Windows Vista 
 Captured and analyzed over **4.4 million executed instructions** from a Windows Vista boot to reconstruct the execution trace and identify Vista's SHA-1 hashing routine.
+
 ![sha1-algo](docs/sha1-algo.png)
 
 ## Why Dynamic Analysis (DBI) Over Static Analysis?
@@ -103,4 +104,4 @@ All documentation and examples for each can be found:
 
 ## Current Guest Architecture Support
 Current supporting guest architecture: **x86**.
-Adding support for another architecture can be found here[docs/QEMU.md](docs/QEMU.md).
+Adding support for another architecture can be found here [docs/QEMU.md](docs/QEMU.md).
