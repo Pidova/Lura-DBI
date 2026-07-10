@@ -6,11 +6,11 @@
 
 namespace cfg_tools {
 
-    namespace detail {
+      namespace detail {
 
             /* Recursive helper function for Depth-First Search Post-Order traversal */
             template <typename Graph>
-            inline void dfs_post_order(const basic_block<Graph>& vs, const Graph &g, boost::unordered_flat_set<basic_block<Graph>> &visited, boost::container::vector<basic_block<Graph>> &order) {
+            inline void dfs_post_order(const basic_block<Graph> &vs, const Graph &g, boost::unordered_flat_set<basic_block<Graph>> &visited, boost::container::vector<basic_block<Graph>> &order) {
 
                   boost::container::vector<std::pair<basic_block<Graph>, bool>> stack;
                   stack.emplace_back(std::make_pair(vs, false));

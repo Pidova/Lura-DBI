@@ -1,4 +1,5 @@
 #pragma once
+#include "archs/ARM.hpp"
 #include "archs/X86.hpp"
 #include "headers/defs.hpp"
 #include "headers/helpers.hpp"

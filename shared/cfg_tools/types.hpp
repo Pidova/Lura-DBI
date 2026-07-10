@@ -38,6 +38,6 @@ namespace cfg_tools {
 
       /* Given graph and node returns string representation of node */
       template <typename Graph>
-      using cb_node_string = std::function<std::string(const Graph &, const basic_block<Graph>&)>;
+      using cb_node_string = std::function<std::string(const Graph &, const basic_block<Graph> &)>;
 
 } // namespace cfg_tools

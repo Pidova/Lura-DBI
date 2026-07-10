@@ -6,6 +6,7 @@
 #include <boost/asio/thread_pool.hpp>
 #include <boost/icl/interval_set.hpp>
 #include <boost/smart_ptr.hpp>
+#include <capstone/arm64.h>
 #include <capstone/capstone.h>
 #include <capstone/x86.h>
 #include <cstdint>
@@ -39,10 +40,10 @@ namespace lurapro {
       vcpu_vec<boost::unordered_flat_set<edge, edge_hash>> *prevd_jumps_set = nullptr;  /* Jmp locs */
 
       struct signaled_edge {
-            cpu_tracer::address from = 0u;      /* From real PC */
-            cpu_tracer::address target_pc = 0u; /* Target Physical Address Note. Some archs only give physical address and Vaddr can be translated to a physical address */
+            cpu_tracer::address from = 0u;                               /* From real PC */
+            std::optional<cpu_tracer::address> target_pc = std::nullopt; /* Target Physical Address Note. Some archs only give physical address and Vaddr can be translated to a physical address and real PC through maps */
       };
-      vcpu_vec<std::optional<signaled_edge>> *signaled_edges = nullptr;
+      vcpu_vec<std::optional<signaled_edge>> *signaled_edges = nullptr; /* Signaled edges */
 #ifdef QEMU_PLUGIN_DELAY_CBS
       std::atomic<bool> start_cbs{false}; /* Start CBs at a later time */
 #endif

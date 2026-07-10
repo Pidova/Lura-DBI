@@ -53,7 +53,7 @@ namespace cfg_tools {
                   for (const auto &node : region_blocks) {
 
                         const auto [edge_it, edge_end] = boost::out_edges(node, g);
-                        for (auto it = edge_it; it != edge_end; ++it) {                       
+                        for (auto it = edge_it; it != edge_end; ++it) {
 
                               if (const auto target = boost::target(*it, g); !region_blocks.contains(target) && target != entry) {
                                     if (recorded_exits.contains(node)) {
@@ -107,8 +107,8 @@ namespace cfg_tools {
                   stack.emplace_back(*root_it, ei);
 
                   while (!stack.empty()) {
-					  
-                        auto &[curr, edge_it] = stack.back();              
+
+                        auto &[curr, edge_it] = stack.back();
                         if (auto [_, current_ee] = boost::out_edges(curr, g); edge_it != current_ee) {
 
                               const auto edge = *edge_it;

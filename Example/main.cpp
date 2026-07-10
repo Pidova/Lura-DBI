@@ -56,6 +56,26 @@ std::int32_t main() {
             }
       }
 
+      /* ARM */
+      {
+            if (csh h; cs_open(CS_ARCH_ARM, CS_MODE_ARM, &h) == CS_ERR_OK) {
+                  cs_option(h, CS_OPT_SKIPDATA, CS_OPT_ON);
+                  capmap[cpu_tracer::archs::interpretation_mode::arm32] = std::pair(h, cs_malloc(h));
+            }
+            if (csh h; cs_open(CS_ARCH_ARM, CS_MODE_THUMB, &h) == CS_ERR_OK) {
+                  cs_option(h, CS_OPT_SKIPDATA, CS_OPT_ON);
+                  capmap[cpu_tracer::archs::interpretation_mode::arm_thumb] = std::pair(h, cs_malloc(h));
+            }
+            if (csh h; cs_open(CS_ARCH_ARM, CS_MODE_MCLASS, &h) == CS_ERR_OK) {
+                  cs_option(h, CS_OPT_SKIPDATA, CS_OPT_ON);
+                  capmap[cpu_tracer::archs::interpretation_mode::arm_mclass] = std::pair(h, cs_malloc(h));
+            }
+            if (csh h; cs_open(CS_ARCH_ARM, CS_MODE_V8, &h) == CS_ERR_OK) {
+                  cs_option(h, CS_OPT_SKIPDATA, CS_OPT_ON);
+                  capmap[cpu_tracer::archs::interpretation_mode::arm_v8] = std::pair(h, cs_malloc(h));
+            }
+      }
+
       /* Load data */
       for (const auto &entry : std::filesystem::directory_iterator(config::SAVE_DIRECTORY)) {
 

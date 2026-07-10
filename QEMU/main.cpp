@@ -20,6 +20,7 @@ namespace cbs {
                               return;
                         }
                         thread_local GByteArray *buf = g_byte_array_new();
+                        std::printf("enum class ?? : std::uint16_t {\n");
                         for (auto i = 0u; i < arr->len; ++i) {
 
                               if (!helpers::read_register(buf, i, arr)) {
@@ -35,6 +36,7 @@ namespace cbs {
 #endif
                               std::printf("\n");
                         }
+                        std::printf("};\n");
                         return;
                   }
             } // namespace debug
@@ -56,6 +58,9 @@ namespace cbs {
                               x86::mem::access(vcpu_index, vaddr, reinterpret_cast<lurapro::inst *>(userdata)->inst.real_pc);
                               break;
                         }
+                        case cpu_tracer::archs::arch::ARM: {
+                              break;
+                        }
                         default: {
                               throw std::runtime_error("Unsupported architecture on memwrite");
                               break;
@@ -67,6 +72,9 @@ namespace cbs {
             /* On Inst execute validate it or no */
             static void __cdecl first_exec(std::uint32_t vcpu_index, void *userdata) {
 
+#ifdef QEMU_DUMP_REG_LIST
+                  debug::print_regs();
+#endif
                   process::inst::first(vcpu_index, reinterpret_cast<lurapro::inst *>(userdata));
                   return;
             }
@@ -291,7 +299,10 @@ namespace cbs {
                   /* Signaled edges */
                   if (auto &pe = (*lurapro::signaled_edges)[vcpu_index]; pe) [[unlikely]] {
 
-                        if (std::uint64_t addr_buf = 0u; lurapro::qemu_w<qemu_plugin_translate_vaddr>(b->loc, &addr_buf) && pe->target_pc == addr_buf) {
+                        if (!pe->target_pc) {
+
+                              djmps.emplace_back(lurapro::edge(cpu_tracer::blocks::edges::kind::signaled, b->loc, pe->from));
+                        } else if (std::uint64_t addr_buf = 0u; lurapro::qemu_w<qemu_plugin_translate_vaddr>(b->loc, &addr_buf) && pe->target_pc == addr_buf) {
 
                               djmps.emplace_back(lurapro::edge(cpu_tracer::blocks::edges::kind::signaled, b->loc, pe->from));
                         }
@@ -379,24 +390,76 @@ namespace cbs {
                                     b->interpretation_id = mode;
                               }
 
-                              /* Special instructions */
-                              cpu_tracer::flag fset_exec = false;
-                              switch (config::ARCH) {
-                                    case cpu_tracer::archs::arch::x86: {
+                              const auto opid = helpers::get_op_id(h, inst);
 
-                                          /* WRMSR */
-                                          if (inst.inst.contains({0x0F, 0x30})) [[unlikely]] {
-                                                fset_exec = true;
-                                                lurapro::qemu_w<qemu_plugin_register_vcpu_insn_exec_cb>(insn, !i ? x86::cbs::insts::first_wrmsr_exec : x86::cbs::insts::wrmsr_exec, qemu_plugin_cb_flags::QEMU_PLUGIN_CB_R_REGS, reinterpret_cast<void *>(&b->insts[i]));
+                              /* Special instructions */
+                              cpu_tracer::flag fset_exec_cb = false;
+                              if (opid) [[likely]] {
+
+                                    switch (config::ARCH) {
+                                          case cpu_tracer::archs::arch::x86: {
+
+                                                /* WRMSR */
+                                                switch (x86_insn(*opid)) {
+
+                                                      /* MMIO Base */
+                                                      case x86_insn::X86_INS_WRMSR: {
+                                                            fset_exec_cb = true;
+                                                            lurapro::qemu_w<qemu_plugin_register_vcpu_insn_exec_cb>(insn, !i ? x86::cbs::insts::first_wrmsr_exec : x86::cbs::insts::wrmsr_exec, qemu_plugin_cb_flags::QEMU_PLUGIN_CB_R_REGS, reinterpret_cast<void *>(&b->insts[i]));
+                                                            break;
+                                                      }
+                                                      default: {
+                                                            break;
+                                                      }
+                                                }
+                                                break;
                                           }
-                                          break;
-                                    }
-                                    default: {
-                                          break;
+                                          case cpu_tracer::archs::arch::ARM: {
+
+                                                switch (arm_insn(*opid)) {
+
+                                                      /* Events */
+                                                      case arm_insn::ARM_INS_SEV: {
+                                                            fset_exec_cb = true;
+                                                            lurapro::qemu_w<qemu_plugin_register_vcpu_insn_exec_cb>(insn, !i ? arm::cbs::insts::first_sev_exec : arm::cbs::insts::sev_exec, qemu_plugin_cb_flags::QEMU_PLUGIN_CB_R_REGS, reinterpret_cast<void *>(&b->insts[i]));
+                                                            break;
+                                                      }
+                                                      case arm_insn::ARM_INS_SEVL: {
+                                                            fset_exec_cb = true;
+                                                            lurapro::qemu_w<qemu_plugin_register_vcpu_insn_exec_cb>(insn, !i ? arm::cbs::insts::first_sevl_exec : arm::cbs::insts::sevl_exec, qemu_plugin_cb_flags::QEMU_PLUGIN_CB_R_REGS, reinterpret_cast<void *>(&b->insts[i]));
+                                                            break;
+                                                      }
+                                                      case arm_insn::ARM_INS_WFE: {
+                                                            fset_exec_cb = true;
+                                                            lurapro::qemu_w<qemu_plugin_register_vcpu_insn_exec_cb>(insn, !i ? arm::cbs::insts::first_wfe_exec : arm::cbs::insts::wfe_exec, qemu_plugin_cb_flags::QEMU_PLUGIN_CB_R_REGS, reinterpret_cast<void *>(&b->insts[i]));
+                                                            break;
+                                                      }
+
+                                                      /* SMC */
+                                                      case arm_insn::ARM_INS_SMC: {
+                                                            fset_exec_cb = true;
+                                                            lurapro::qemu_w<qemu_plugin_register_vcpu_insn_exec_cb>(insn, !i ? arm::cbs::insts::first_smc_exec : arm::cbs::insts::smc_exec, qemu_plugin_cb_flags::QEMU_PLUGIN_CB_R_REGS, reinterpret_cast<void *>(&b->insts[i]));
+                                                            break;
+                                                      }
+                                                      default: {
+                                                            break;
+                                                      }
+                                                }
+                                                break;
+                                          }
+                                          default: {
+                                                break;
+                                          }
                                     }
                               }
-                              if (!fset_exec) [[likely]] {
-                                    lurapro::qemu_w<qemu_plugin_register_vcpu_insn_exec_cb>(insn, !i ? inst::first_exec : inst::exec, qemu_plugin_cb_flags::QEMU_PLUGIN_CB_NO_REGS, reinterpret_cast<void *>(&b->insts[i]));
+
+                              if (!fset_exec_cb) [[likely]] {
+#ifdef QEMU_DUMP_REG_LIST
+                                    constexpr auto rvar = qemu_plugin_cb_flags::QEMU_PLUGIN_CB_R_REGS;
+#else
+                                    constexpr auto rvar = qemu_plugin_cb_flags::QEMU_PLUGIN_CB_NO_REGS;
+#endif
+                                    lurapro::qemu_w<qemu_plugin_register_vcpu_insn_exec_cb>(insn, !i ? inst::first_exec : inst::exec, rvar, reinterpret_cast<void *>(&b->insts[i]));
                               }
 
                               /* MMIO */
@@ -519,13 +582,17 @@ extern "C" QEMU_PLUGIN_EXPORT std::int32_t __cdecl qemu_plugin_install(qemu_plug
                   lurapro::mmio::size = 0x1000;
                   break;
             }
+            case cpu_tracer::archs::arch::ARM: {
+                  break;
+            }
             default: {
                   throw std::runtime_error("Unsupported architecture on install");
                   break;
             }
       }
+
 #ifdef _WIN32
-      lurapro::mod = LoadLibraryA("qemu-system-x86_64.exe");
+      lurapro::mod = LoadLibraryA(NULL);
 #endif
       lurapro::qemu_w<qemu_plugin_register_vcpu_init_cb>(id, cbs::vcpus::init);
       lurapro::qemu_w<qemu_plugin_register_atexit_cb>(id, cbs::at_exit, nullptr);

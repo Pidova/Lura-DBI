@@ -3,14 +3,35 @@
 A QEMU TCG plugin framework and header-only C++ pipeline for capturing full-system execution traces from a running QEMU 
 guest and reconstructing them into analyzable, graph-based data.
 
-## Example Usage: Finding Sha-1 Hashing Algorithm Routine in Windows Vista 
-Captured and analyzed over **4.4 million executed instructions** from a Windows Vista boot to reconstruct the execution trace and identify Vista's SHA-1 hashing routine.
+## Example Usages
 
+### Finding SHA-1 Hashing Algorithm Routine in Windows Vista 
+Captured and analyzed over **4.4 million executed instructions** from a Windows Vista boot to reconstruct the execution trace and identify Vista's SHA-1 hashing routine.
 ![sha1-algo](docs/sha1-algo.png)
+
+### Execution Metrics by Target Environment
+
+#### x86_64 Windows Vista (Boot-to-Usage)
+* **Total Instructions Traced:** 4,416,040
+* **Total Blocks Captured:** 1,666,684
+* **Total Edges Resolved:** 842,434
+* **Edge Resolution:** 100% Dynamic Truth Edges
+
+#### x86_64 Alpine Linux (Boot-Setup-Usage)
+* **Total Instructions Traced:** 1,268,502
+* **Total Blocks Captured:** 471,241
+* **Total Edges Resolved:** 247,460
+* **Edge Resolution:** 100% Dynamic Truth Edges
+
+#### AArch64 Alpine Linux (Boot-Setup-Usage)
+* **Total Instructions Traced:** 1,394,419
+* **Total Blocks Captured:** 480,654
+* **Total Edges Resolved:** 250,424
+* **Edge Resolution:** 100% Dynamic Truth Edges
 
 ## Why Dynamic Analysis (DBI) Over Static Analysis?
 
-While static analysis tools like IDA Pro or Ghidra are very good for high-level for analysis, 
+While static analysis tools like IDA Pro or Ghidra are very good for high-level analysis, 
 they struggle a lot when dealing with complexity like: malware obfuscation and low-level operating system behaviors. 
 
 Lura-DBI uses **Dynamic Binary Instrumentation (DBI)** via QEMU to overcome these limitations:
@@ -103,5 +124,5 @@ All documentation and examples for each can be found:
 * [Example](docs/Example.md) – Load a trace, reconstruct its CFG, and print a linearized listing
 
 ## Current Guest Architecture Support
-Current supporting guest architecture: **x86_64**.
+Current supporting guest architecture: **x86_64**, **AArch64/ARM**.
 Adding support for another architecture can be found here [docs/QEMU.md](docs/QEMU.md).

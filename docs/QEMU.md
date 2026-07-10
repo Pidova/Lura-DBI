@@ -91,7 +91,7 @@ unresolved **next** / **next_punk** edge, later reconciled by CPU-Tracer's edge-
 
 # Architecture Specific Support
 
-Currently: **x86_64** Guest Architecture is supported. 
+Currently: **x86_64**, **AArch64/ARM** Guest Architecture is supported. 
 
 ## Adding Support
 
@@ -138,12 +138,14 @@ Given a specific instruction in a given architecture it can have hidden side eff
 This is designed to hook that specific instruction and analyze it.
 
 * **x86_64**: **WRMSR** instructions, which get dedicated callbacks (**x86_64::cbs::insts::first_wrmsr_exec** / **wrmsr_exec**). Required because a write to **IA32_APIC_BASE** (MSR **0x1B**) relocates the local APIC's MMIO window and must be intercepted ahead of normal memory tracking.
+* **ARM**: **SEV**, **SEVL**, **WFE**, and **SMC** instructions, which get dedicated callbacks (e.g., **arm::cbs::insts::sev_exec**, **wfe_exec**). Required to track inter-processor signaling, power-saving loop state-changes, and firmware-level core wakeups ahead of standard step processing.
 
 ## Architecture Helpers
 
 Architecture-specific data is organized as follows:
 
 * **QEMU/src/archs/X86.hpp** — Handles x86_64-specific operations: **WRMSR**-based APIC relocation. ICR/APIC-ID MMIO decoding for cross-VCPU edges.
+* **QEMU/src/archs/ARM.hpp** — Handles ARM-specific operations: Private event-register emulation, **MPIDR**-to-VCPU decoding, and **PSCI** multi-core wakeups.
 
 ### x86_64 (Signaled Edges)
 
@@ -154,30 +156,34 @@ Writes into the local APIC's MMIO window are decoded directly, without waiting f
 
 **Key Takeaway:** Because of this design, cross-CPU interrupts (e.g., an AP wakeup via **INIT**/**SIPI**) successfully show up in the reconstructed CFG even though they never appear as a normal instruction-to-instruction transition.
 
+### ARM (Event & Power Management Signaling)
+
+ARM architecture uses a private event-register tracking array (**event_registers**) up to **config::MAX_CORES** to mimic mailbox/hardware event signaling alongside QEMU:
+
+* **VCPU Mapping (MPIDR Decoding):** Uses **arm_helpers::mpidr_to_vcpu_index** to mask affinity levels (**AFF0** through **AFF3**) out of the target Multiprocessor Affinity Register (**MPIDR**) value to resolve the destination virtual CPU index.
+* **SEV / SEVL (Send Event Local):** * **SEVL** marks the local core's **event_pending = true**.
+* **SEV** triggers **handlers::signal_edges**, looping through all event registers to mark them pending. If a target core is in a **waiting** state, it is kicked awake, and a **signaled_edge** is synthesized linking the current instruction's **real_pc** to that core.
+
+
+* **WFE (Wait For Event):** Evaluates local core status via **handlers::wait_for_event**. If an event is already pending, it is consumed and execution continues; otherwise, the core is flagged as **waiting**.
+* **SMC (Secure Monitor Call - PSCI CPU_ON):** Intercepts CPU power management actions. When an **SMC** instruction is called, registers **X0**, **X1**, and **X2** are read via the QEMU plugin API:
+* If **X0** matches **SMC_PSCI_CPU_ON**, the helper resolves the target VCPU index from the affinity value in **X1**.
+* The target VCPU's event register is set to pending, its waiting status is cleared, and a **signaled_edge** is synthesized mapping the host's **real_pc** to the new core's execution entry point provided in **X2**.
+
 
 
 
 ## Example Usage
-ISO images used directory: **qemu_imgs/**, Plugin in **plugin/**.
+ISO images used directory: **qemu_imgs/**, Plugin in **plugin/**, and Bios in **qemu_bios/**.
 
-### MSDOS
-Create image:
-```
-qemu-img create -f raw msdos.img 500M
-```
-Execute:
-```
-    qemu-system-x86_64.exe -plugin "plugin/QEMU.dll" -drive file="qemu_imgs/MS-DOS.iso",format=raw,media=cdrom -drive file=msdos.img,format=raw,media=disk
-```
-
-### Windows-Vista
+### x86_64 Windows-Vista
 Create image:
 ```
 qemu-img create -f qcow2 winvista.qcow2 40G
 ```
 Execute:
 ```
-    qemu-system-x86_64.exe ^
+qemu-system-x86_64.exe ^
     -cpu qemu64 ^
     -smp 16 ^
     -m 16G ^
@@ -189,25 +195,48 @@ Execute:
     -plugin "QEMU.dll"
 ```
 
-### Windows-10
+### x86_64 Alpine Linux
 Create image:
 ```
-qemu-img create -f qcow2 win10.qcow2 80G
+qemu-img create -f qcow2 alpine64.qcow2 20G
 ```
 Execute:
 ```
-    qemu-system-x86_64.exe ^
-    -cpu qemu64,+x2apic ^
-    -smp 16 ^
-    -m 16G ^
-    -accel tcg,thread=multi,tb-size=4096 ^
+qemu-system-x86_64.exe ^
+    -cpu qemu64 ^
+    -smp 4 ^
+    -m 4G ^
+    -accel tcg,thread=multi,tb-size=2048 ^
     -boot d ^
-    -cdrom "qemu_imgs\windows.iso" ^
-    -drive file="qemu_imgs\virtio-win.iso",media=cdrom,id=virtio_drivers ^
-    -drive file=win10.qcow2,if=none,id=hd0,format=qcow2,cache=unsafe,aio=threads ^
+    -cdrom "qemu_imgs\alpine-standard-x86_64.iso" ^
+    -drive file=alpine64.qcow2,if=none,id=hd0,format=qcow2,cache=unsafe,aio=threads ^
     -device virtio-blk-pci,drive=hd0 ^
-    -vga none ^
-    -device virtio-vga ^
+    -vga std ^
+    -plugin "plugin\QEMU.dll"
+```
+
+### AARCH64 Alpine Linux
+Create image:
+```
+qemu-img create -f qcow2 alpine_arm64.qcow2 20G
+```
+Execute:
+```
+qemu-system-aarch64.exe ^
+    -M virt ^
+    -cpu max ^
+    -smp 4 ^
+    -m 4G ^
+    -accel tcg,thread=multi,tb-size=2048 ^
+    -bios "qemu_bios\edk2-aarch64-code.fd" ^
+    -boot d ^
+    -cdrom "qemu_imgs\alpine-standard-aarch64.iso" ^
+    -drive file=alpine_arm64.qcow2,if=none,id=hd0,format=qcow2,cache=unsafe,aio=threads ^
+    -device virtio-blk-pci,drive=hd0 ^
+    -device virtio-gpu-pci ^
+    -device qemu-xhci,id=usb ^
+    -device usb-kbd,bus=usb.0 ^
+    -device usb-tablet,bus=usb.0 ^
     -plugin "plugin\QEMU.dll"
 ```
 

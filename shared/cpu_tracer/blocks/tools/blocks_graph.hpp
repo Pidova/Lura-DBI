@@ -19,7 +19,7 @@ namespace cpu_tracer::blocks::graph {
 
             Graph<MAX_LEN> g;
 
-            /* Vertex max */
+            /* Vertex map */
             boost::unordered_flat_map<address, VertexDesc<MAX_LEN>> addr_to_vertex;
             for (const auto &[addr, blk] : adata.real_pc_map) {
                   addr_to_vertex[addr] = std::int32_t(boost::add_vertex(blk, g));

@@ -210,8 +210,8 @@ namespace cpu_tracer::blocks {
 
             /* When a VCPU changes state it will capture the state of all active other vcpus */
             enum class state : std::uint8_t {
-                  PAUSED,
-                  RESUME
+                  PAUSED, /* VCPU Paused */
+                  RESUME  /* VCPU Resumed */
             };
             struct captured_block_state {
                   flag fhas_recent_realpc = false;       /* Real pc exists? */
@@ -327,6 +327,7 @@ namespace cpu_tracer::blocks {
             }
       } // namespace mmio
 
+      /* Per-instruction data */
       template <std::uint8_t MAX_LEN>
       struct inst_data {
 
@@ -338,6 +339,7 @@ namespace cpu_tracer::blocks {
 #endif
       };
 
+      /* Translation block */
       template <std::uint8_t MAX_LEN>
       struct block {
 
