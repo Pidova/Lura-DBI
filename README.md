@@ -7,6 +7,7 @@ guest and reconstructing them into analyzable, graph-based data.
 
 ### Finding SHA-1 Hashing Algorithm Routine in Windows Vista 
 Captured and analyzed over **4.4 million executed instructions** from a Windows Vista boot to reconstruct the execution trace and identify Vista's SHA-1 hashing routine.
+
 ![sha1-algo](docs/sha1-algo.png)
 
 ### Execution Metrics by Target Environment
