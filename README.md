@@ -51,25 +51,25 @@ A separate offline pipeline then loads that trace back, reconstructs its control
 or a Boost Graph Library CFG using [CFG-Tools](https://github.com/Pidova/CFG-Tools).
 
 The project is split into three pieces:
-* **QEMU plugin** (**QEMU/**) – a shared library loaded into QEMU via **-plugin**, responsible for capturing the raw trace
-* **Example** (**Example/**) – a standalone program that loads a trace, reconstructs its CFG, and prints a linearized listing
-* **shared/** – Copies of CPU-Tracer and CFG-Tools, the two header-only libraries the plugin and Example build on
+* **QEMU plugin** (**QEMU/**) - a shared library loaded into QEMU via **-plugin**, responsible for capturing the raw trace
+* **Example** (**Example/**) - a standalone program that loads a trace, reconstructs its CFG, and prints a linearized listing
+* **shared/** - Copies of CPU-Tracer and CFG-Tools, the two header-only libraries the plugin and Example build on
 
 ## Prerequisites
 
 * [CMake](https://cmake.org/) >= 3.31
 * A C++23 compiler (MSVC, Clang, or GCC)
-* [Conan](https://conan.io/) 2.x – dependencies resolve automatically at configure time through [conan_provider.cmake](https://github.com/conan-io/cmake-conan), no manual **conan install** step is required
+* [Conan](https://conan.io/) 2.x - dependencies resolve automatically at configure time through [conan_provider.cmake](https://github.com/conan-io/cmake-conan), no manual **conan install** step is required
 * A QEMU source/build tree with plugin support enabled (**--enable-plugins**), for **qemu/qemu-plugin.h**, System variable needs to be named **QEMU_INCLUDE_DIR**
 
 
 Dependencies below are declared in [conandata.yml](conandata.yml) and resolved by Conan automatically:
 
-* [Boost](https://www.boost.org/) 1.88.0 – **boost::graph**, **boost::asio**, **boost::icl**, **boost::container**, **boost::smart_ptr**, **boost::sort**
-* [capstone](https://github.com/capstone-engine/capstone) 5.0.6 – disassembly / interpretation-mode detection
-* [glib](https://gitlab.gnome.org/GNOME/glib) 2.85.3 – required by the QEMU plugin ABI (**GByteArray**, **GArray**)
+* [Boost](https://www.boost.org/) 1.88.0 - **boost::graph**, **boost::asio**, **boost::icl**, **boost::container**, **boost::smart_ptr**, **boost::sort**
+* [capstone](https://github.com/capstone-engine/capstone) 5.0.6 - disassembly / interpretation-mode detection
+* [glib](https://gitlab.gnome.org/GNOME/glib) 2.85.3 - required by the QEMU plugin ABI (**GByteArray**, **GArray**)
 * [rapidjson](https://github.com/Tencent/rapidjson) 1.1.0
-* [lz4](https://github.com/lz4/lz4) 1.10.0 – edge compression, via CPU-Tracer
+* [lz4](https://github.com/lz4/lz4) 1.10.0 - edge compression, via CPU-Tracer
 
 ## Building
 
@@ -91,8 +91,8 @@ cmake --build build --config Release
 ```
 
 This produces two targets:
-* **QEMU** – the plugin shared library (**QEMU.dll** / **libQEMU.so**)
-* **Example** – a standalone executable that loads and analyzes the trace files the plugin writes out
+* **QEMU** - the plugin shared library (**QEMU.dll** / **libQEMU.so**)
+* **Example** - a standalone executable that loads and analyzes the trace files the plugin writes out
 
 ## Running
 
@@ -114,15 +114,15 @@ Pipeline (as in **Example/main.cpp** does) just requires libraries:
 ## Libraries
 
 Two standalone, header-only libraries:
-* [CPU-Tracer](https://github.com/Pidova/CPU-Tracer) – on-disk block/edge format, streaming load & analysis, BGL graph construction
-* [CFG-Tools](https://github.com/Pidova/CFG-Tools) – CFG linearization and modularization, used by **Example** to print it
-* [BoostPP flat vector](https://github.com/Pidova/BoostPP/blob/main/vector.hpp) – used internally by CPU-Tracer for fixed-capacity instruction/edge buffers
+* [CPU-Tracer](https://github.com/Pidova/CPU-Tracer) - on-disk block/edge format, streaming load & analysis, BGL graph construction
+* [CFG-Tools](https://github.com/Pidova/CFG-Tools) - CFG linearization and modularization, used by **Example** to print it
+* [BoostPP flat vector](https://github.com/Pidova/BoostPP/blob/main/vector.hpp) - used internally by CPU-Tracer for fixed-capacity instruction/edge buffers
 
 ## Documentation and Examples
 
 All documentation and examples for each can be found:
-* [QEMU Plugin](docs/QEMU.md) – Plugin architecture, Architecture support, callback registration, block/edge/interrupt/MMIO capture, Architecture Specific edge signaling, configuration and debug macros
-* [Example](docs/Example.md) – Load a trace, reconstruct its CFG, and print a linearized listing
+* [QEMU Plugin](docs/QEMU.md) - Plugin architecture, Architecture support, callback registration, block/edge/interrupt/MMIO capture, Architecture Specific edge signaling, configuration and debug macros
+* [Example](docs/Example.md) - Load a trace, reconstruct its CFG, and print a linearized listing
 
 ## Current Guest Architecture Support
 Current supporting guest architecture: **x86_64**, **AArch64/ARM**.
